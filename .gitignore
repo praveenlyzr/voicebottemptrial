@@ -1,0 +1,4 @@
+.streamlit/secrets.toml
+*.py
+*.wav
+.devcontainer/devcontainer.json
