@@ -1,0 +1,7 @@
+altair
+numpy
+pandas
+pydeck
+streamlit
+audio_recorder_streamlit
+openai
