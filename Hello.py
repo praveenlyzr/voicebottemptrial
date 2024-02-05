@@ -11,7 +11,7 @@ if not os.path.exists('tempDir'):
 # Setup your config
 st.set_page_config(
     page_title="LyzrVoice",
-    layout="centered",  # or "wide" 
+    layout="wide",  # "wide" or "centered"
     initial_sidebar_state="auto",
     page_icon="lyzr-logo-cut.png"
 )
@@ -20,7 +20,7 @@ st.set_page_config(
 os.environ['OPENAI_API_KEY'] = st.secrets["apikey"]
 
 # Function definitions (text_to_notes, transcribe, save_uploadedfile, etc.) go here...
-def text_to_notes(text):
+def lyzr_voice_persona(text):
     client = OpenAI()
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -76,45 +76,63 @@ def text_to_speech(text, model="tts-1-hd", voice="echo"):
     #with col1:
         #audio_bytes = audio_recorder()
     
+def get_transformed_text(format_type):
+    transformed_text_context = f"answer this like a {format_type}"
+    full_transcript = transcript + "\n\n" + transformed_text_context
+    transformed_text = lyzr_voice_persona(full_transcript)  
+    return transformed_text
 
 
 # # Load and display the logo
 image = Image.open("lyzr-logo.png")
-# col3, col4 = st.columns(2)
-# # App title and introduction
 st.image(image, width=150)
 st.title("LyzrVoice Demo")
-# with col3:
-    
-    
-# with col4:
-    
-    
-# st.markdown("### Welcome to LyzrVoice!")
-# st.markdown("Upload an audio recording or record your voice directly, and let the AI assist you with your questions.")
 
-
-# # Start of the main container
-
-# st.markdown("#### 🎤 Record or Upload")
 st.caption('Note: The recording will stop as soon as you pause/stop speaking. Please continue to speak without a break to get the full transcript.')
 
 recorded = False
 
-with st.container():
+
+with st.container():  
     recording, playback = st.columns(2)
     with recording:
-        audio_bytes = audio_recorder()   
-    
+        audio_bytes = audio_recorder()  
+    #records audio
     if audio_bytes:
-        # Record audio
-        # st.audio(audio_bytes, format="audio/wav")
         with open('tempDir/output.wav', 'wb') as f:
             f.write(audio_bytes)
         transcript = transcribe('tempDir/output.wav')
         transcript = st.text_area("Transcript", transcript, height=150)
-        transcript = text_to_notes(transcript)
-        transcript = st.text_area("Response", transcript, height=150)
+        
+        # Display buttons and handle their click actions
+        st.write("Transform Transcript Into:")
+        conv, btn_col1, btn_col2, btn_col3, btn_col4, btn_col5, btn_col6, btn_col7 = st.columns(8)
+        transformed_text = "a conversation reply"
+        with conv:
+            st.write("Convert into:")
+        with btn_col1:
+            if st.button("Notes"):
+                transformed_text = "notes or bullet points"
+        with btn_col2:
+            if st.button("Email"):
+                transformed_text = "email to be sent"
+        with btn_col3:
+            if st.button("Todo"):
+                transformed_text = "todo list"
+        with btn_col4:
+            if st.button("Summary"):
+                transformed_text = "summary"
+        with btn_col5:
+            if st.button("Tweet"):
+                transformed_text = "tweet"
+        with btn_col6:
+            if st.button("LinkedIn"):
+                transformed_text = "linkedin post"
+        with btn_col7:
+            if st.button("SMS"):
+                transformed_text = "sms"
+        transcript = get_transformed_text(transformed_text)
+        transcript = st.text_area("Response", value=transcript, height=150)
         recorded = True
     else:
         transcript = ""  # No transcript available initially
