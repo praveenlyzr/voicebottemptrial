@@ -3,6 +3,7 @@ from audio_recorder_streamlit import audio_recorder
 from openai import OpenAI
 from PIL import Image
 import streamlit as st
+from lyzr import VoiceBot
 
 # Create a temporary directory if it doesn't exist
 if not os.path.exists('tempDir'):
@@ -18,12 +19,13 @@ st.set_page_config(
 
 # Setup your OpenAI API key
 os.environ['OPENAI_API_KEY'] = st.secrets["apikey"]
+vb = VoiceBot(api_key = st.secrets["apikey"])
 
 # Function definitions (text_to_notes, transcribe, save_uploadedfile, etc.) go here...
 def lyzr_voice_persona(text):
     client = OpenAI()
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo",
         messages=[
             {
                 "role": "system",
@@ -43,38 +45,11 @@ def lyzr_voice_persona(text):
     notes = response.choices[0].message.content
     return notes
 
-def transcribe(location):
-    client = OpenAI()
-    
-    with open(location, "rb") as audio_file:
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1", 
-            file=audio_file,
-            prompt="lyzr" 
-        )
-    return transcript.text
-
 def save_uploadedfile(uploaded_file):
     with open(os.path.join('tempDir', uploaded_file.name), "wb") as f:
         f.write(uploaded_file.getbuffer())
     return st.success(f"Saved File: {uploaded_file.name} to tempDir")
 
-def text_to_speech(text, model="tts-1-hd", voice="echo"):
-    api_key = st.secrets["apikey"] # Replace with your Streamlit secrets path
-    
-    client = OpenAI(api_key=api_key)
-    response = client.audio.speech.create(
-        model=model,
-        voice=voice,
-        input=text, 
-    )
-    
-    # Save the synthesized speech to a file named "tts_output.mp3"
-    response.stream_to_file("tts_output.mp3")
-    
-
-    #with col1:
-        #audio_bytes = audio_recorder()
     
 def get_transformed_text(format_type):
     transformed_text_context = f"answer this like a {format_type}"
@@ -101,12 +76,12 @@ with st.container():
     if audio_bytes:
         with open('tempDir/output.wav', 'wb') as f:
             f.write(audio_bytes)
-        transcript = transcribe('tempDir/output.wav')
+        transcript = vb.transcribe('tempDir/output.wav')
         transcript = st.text_area("Transcript", transcript, height=150)
         
         # Display buttons and handle their click actions
         st.write("Transform Transcript Into:")
-        conv, btn_col1, btn_col2, btn_col3, btn_col4, btn_col5, btn_col6, btn_col7 = st.columns(8)
+        conv, btn_col1, btn_col2, btn_col3, btn_col4, btn_col5, btn_col6, btn_col7, btn_col8 = st.columns(9)
         transformed_text = "a conversation reply"
         with conv:
             st.write("Convert into:")
@@ -131,6 +106,9 @@ with st.container():
         with btn_col7:
             if st.button("SMS"):
                 transformed_text = "sms"
+        with btn_col8:
+            if st.button("LinkedIn DM"):
+                transformed_text = "LinkedIn DM"
         transcript = get_transformed_text(transformed_text)
         transcript = st.text_area("Response", value=transcript, height=150)
         recorded = True
@@ -142,7 +120,7 @@ with st.container():
 
 # Generate TTS from transcript if any
 if transcript and recorded:
-    text_to_speech(transcript)
+    vb.text_to_speech(transcript)
     # Display the speaker icon and TTS audio if generated
     tts_audio_file = 'tts_output.mp3'
     if os.path.isfile(tts_audio_file):
