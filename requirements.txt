@@ -3,3 +3,4 @@ audio_recorder_streamlit
 openai
 lyzr
 langchain-community
+llama_index
