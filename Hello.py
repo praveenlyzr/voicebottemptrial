@@ -3,7 +3,7 @@ from audio_recorder_streamlit import audio_recorder
 from openai import OpenAI
 from PIL import Image
 import streamlit as st
-from lyzr import VoiceBot
+from utils import *
 
 # Create a temporary directory if it doesn't exist
 if not os.path.exists('tempDir'):
@@ -19,7 +19,6 @@ st.set_page_config(
 
 # Setup your OpenAI API key
 os.environ['OPENAI_API_KEY'] = st.secrets["apikey"]
-vb = VoiceBot(api_key = st.secrets["apikey"])
 
 # Function definitions (text_to_notes, transcribe, save_uploadedfile, etc.) go here...
 def lyzr_voice_persona(text):
@@ -76,7 +75,7 @@ with st.container():
     if audio_bytes:
         with open('tempDir/output.wav', 'wb') as f:
             f.write(audio_bytes)
-        transcript = vb.transcribe('tempDir/output.wav')
+        transcript = transcribe('tempDir/output.wav')
         transcript = st.text_area("Transcript", transcript, height=150)
         
         # Display buttons and handle their click actions
@@ -120,7 +119,7 @@ with st.container():
 
 # Generate TTS from transcript if any
 if transcript and recorded:
-    vb.text_to_speech(transcript)
+    text_to_speech(transcript)
     # Display the speaker icon and TTS audio if generated
     tts_audio_file = 'tts_output.mp3'
     if os.path.isfile(tts_audio_file):
