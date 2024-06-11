@@ -2,4 +2,3 @@ streamlit
 audio_recorder_streamlit
 openai
 lyzr
-langchain-community
